@@ -7,15 +7,24 @@ public class PlayerController : MonoBehaviour
 {
     [Header("Move")]
     [SerializeField] private float moveSpeed = 5.0f;
-    [SerializeField] private float jumpForce = 5.0f;
-
+    [SerializeField] private float jumpForce = 3.0f;
+    private float originSpeed;
+     
     [Header("Rotate")]
     [SerializeField] private float DPI = 600f;
     [SerializeField] private Transform cameraPoint;
     private float cameraPitch = 0f;
 
+    [Header("GetItem")]
+    [SerializeField] public float magnetRange = 3f;
+    private float originRange;
+
+    [Header("Score")]
+    public int score = 0;
+
     private Rigidbody rb;
     private bool isGrounded = true;
+    [Header("Animator")]
     [SerializeField] Animator animator;
     
     private void Awake()
@@ -29,19 +38,26 @@ public class PlayerController : MonoBehaviour
         animator = GetComponentInChildren<Animator>();
     }
 
+    private void Start()
+    {
+        originSpeed = moveSpeed;
+        originRange = magnetRange;
+    }
+
     void Update()
     {
         HandleMove();
         HandleJump();
         Rotate();
         UpdateAnimation();
+        Magnet();
     }
     private void UpdateAnimation()
     {
         float h = Input.GetAxisRaw("Horizontal");
         float v = Input.GetAxisRaw("Vertical");
 
-        float inputSpeed = new Vector2(h, v).magnitude; // 0~1
+        float inputSpeed = new Vector2(h, v).magnitude; 
         animator.SetFloat("Speed", inputSpeed);
 
         animator.SetBool("IsGround", isGrounded);
@@ -100,6 +116,56 @@ public class PlayerController : MonoBehaviour
         if (collision.gameObject.CompareTag("Ground"))
         {
             isGrounded = true;
+        }
+    }
+
+    public void AddScore(int amount)
+    {
+        score += amount;
+    }
+
+    public void GetSpeedItem(float addSpeed, float speedTime)
+    {
+        StopCoroutine("SpeedReset");
+
+        moveSpeed *= addSpeed;
+
+        StartCoroutine(SpeedReset(speedTime));
+    }
+    private IEnumerator SpeedReset(float speedTime)
+    {
+        yield return new WaitForSeconds(speedTime);
+
+        moveSpeed = originSpeed;
+    }
+
+    public void GetMagnetItem(float addRange, float magnetTime)
+    {
+        StopCoroutine("MagnetReset");
+
+        magnetRange *= addRange;
+
+        StartCoroutine(MagnetReset(magnetTime));
+    }
+    private IEnumerator MagnetReset(float magnetTime)
+    {
+        yield return new WaitForSeconds(magnetTime);
+
+        magnetRange = originRange;
+    }
+
+    private void Magnet()
+    {
+        
+
+        Collider[] hits = Physics.OverlapSphere(transform.position, magnetRange);
+
+        foreach(var hit in hits)
+        {
+            if(hit.CompareTag("Item"))
+            {
+                hit.transform.position = Vector3.MoveTowards(hit.transform.position, transform.position, 10f * Time.deltaTime);
+            }
         }
     }
 }
