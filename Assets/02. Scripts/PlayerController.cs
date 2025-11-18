@@ -24,6 +24,7 @@ public class PlayerController : MonoBehaviour
 
     private Rigidbody rb;
     private bool isGrounded = true;
+    private bool isPaused = false;
     [Header("Animator")]
     [SerializeField] Animator animator;
     
@@ -51,6 +52,7 @@ public class PlayerController : MonoBehaviour
         Rotate();
         UpdateAnimation();
         Magnet();
+        Pause();
     }
     private void UpdateAnimation()
     {
@@ -168,4 +170,23 @@ public class PlayerController : MonoBehaviour
             }
         }
     }
+
+    private void Pause()
+    {
+        if(Input.GetKeyDown(KeyCode.Escape))
+        {
+            if(!isPaused)
+            {
+                UIObserve.Instance.ShowPause();
+                isPaused = true;
+            }
+            else
+            {
+                UIObserve.Instance.HidePause();
+                isPaused = false;    
+            }
+        }
+    }
+
+   
 }
